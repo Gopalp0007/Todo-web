@@ -10,7 +10,7 @@ app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 
 // MongoDB 
-mongoose.connect("mongodb://127.0.0.1:27017/todoapp", {
+mongoose.connect("mongodb+srv://sp7970161543new5_db_user:JC06aDWDNmr6laGd@cluster0.87wq23g.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
   useNewUrlParser: true,
   useUnifiedTopology: true, 
 }).then(() => console.log("✅ MongoDB Connected"))
