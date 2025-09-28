@@ -46,7 +46,7 @@
           <!-- Task  -->
           <p style="<%= item.done ? 'text-decoration: line-through; color: gray;' : '' %>">
             <%= item.text %>
-            <span class="priority (<%= item.priority %>)">[<%= item.priority %>]</span>
+            <span class="priority <%= item.priority %>">[<%= item.priority %>]</span>
           </p>
 
           <!-- Edit  -->

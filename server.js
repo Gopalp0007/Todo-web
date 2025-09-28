@@ -1,6 +1,8 @@
+require('dotenv').config();
 const express = require("express");
 const mongoose = require("mongoose");
 const Task = require("./models/Task");
+const path = require("path");
 
 const app = express();
 
