@@ -1,79 +1,109 @@
-require('dotenv').config();
 const express = require("express");
+const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-const Task = require("./models/Task");
-const path = require("path");
 
 const app = express();
 
-// EJS 
+// View Engine
 app.set("view engine", "ejs");
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
-app.use(express.urlencoded({ extended: true }));
 
-// MongoDB 
-mongoose.connect("mongodb+srv://sp7970161543new5_db_user:JC06aDWDNmr6laGd@cluster0.87wq23g.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true, 
-}).then(() => console.log("✅ MongoDB Connected"))
-  .catch(err => console.error(err));
+// MongoDB Connection (local)
+mongoose.connect("mongodb://localhost:27017/todoDB", { useNewUrlParser: true, useUnifiedTopology: true });
 
-// Home 
-app.get("/", async (req, res) => {
-  const tasks = await Task.find().lean();
-  res.render("list", { items: tasks });
+// Schema
+const taskSchema = new mongoose.Schema({
+    name: String,
+    priority: String,
+    done: Boolean
+});
+
+const Task = mongoose.model("Task", taskSchema);
+
+// Home Route
+app.get("/", function (req, res) {
+    Task.find({}, function (err, foundItems) {
+        if (err) {
+            console.log(err);
+        } else {
+            res.render("list", { tasks: foundItems });
+        }
+    });
 });
 
 // Add 
-app.post("/add", async (req, res) => {
-  const { ele1, priority } = req.body;
-  if (!ele1.trim()) {
-    return res.send("<script>alert('Task cannot be empty!'); window.location.href='/'</script>");
-  }
-  await Task.create({ text: ele1, priority: priority || "low" });
-  res.send("<script>alert('Task added successfully!'); window.location.href='/'</script>");
+app.post("/add", function (req, res) {
+    const taskName = req.body.ele1;
+    const priority = req.body.priority || "low";
+
+    const newTask = new Task({
+        name: taskName,
+        priority: priority,
+        done: false
+    });
+
+    newTask.save();
+    res.redirect("/");
 });
 
-// Delete 
-app.post("/delete", async (req, res) => {
-  const { id } = req.body;
-  await Task.findByIdAndDelete(id);
-  res.send("<script>alert('Task deleted successfully!'); window.location.href='/'</script>");
+// Delete
+app.post("/delete", function (req, res) {
+    const check = req.body.id;
+    Task.findByIdAndRemove(check, function (err) {
+        if (!err) {
+            console.log("Deleted");
+            res.redirect("/");
+        }
+    });
 });
 
-// Toggle Task
-app.post("/toggle", async (req, res) => {
-  const { id } = req.body;
-  const task = await Task.findById(id);
-  if (task) {
-    task.done = !task.done;
-    await task.save();
-  }
-  res.redirect("/");
+// Toggle
+app.post("/toggle", function (req, res) {
+    const id = req.body.id;
+    Task.findById(id, function (err, task) {
+        if (!err && task) {
+            task.done = !task.done;
+            task.save();
+            res.redirect("/");
+        }
+    });
 });
 
-// Edit 
-app.post("/edit", async (req, res) => {
-  const { id, newText } = req.body;
-  if (newText.trim()) {
-    await Task.findByIdAndUpdate(id, { text: newText });
-    return res.send("<script>alert('Task updated successfully!'); window.location.href='/'</script>");
-  }
-  res.redirect("/");
+// Edit
+app.post("/edit", function (req, res) {
+    const id = req.body.id;
+    const newText = req.body.newText;
+
+    if (newText.trim() !== "") {
+        Task.findByIdAndUpdate(id, { name: newText }, function (err) {
+            if (!err) {
+                console.log("Updated");
+                res.redirect("/");
+            }
+        });
+    } else {
+        res.redirect("/");
+    }
 });
 
-// Priority
-app.get("/filter", async (req, res) => {
-  const { priority } = req.query;
-  let tasks;
-  if (priority) {
-    tasks = await Task.find({ priority }).lean();
-  } else {
-    tasks = await Task.find().lean();
-  }
-  res.render("list", { items: tasks });
+// Filter Priority
+app.get("/filter", function (req, res) {
+    const priority = req.query.priority;
+    let query = {};
+    if (priority) {
+        query.priority = priority;
+    }
+
+    Task.find(query, function (err, foundItems) {
+        if (!err) {
+            res.render("list", { tasks: foundItems });
+        }
+    });
 });
 
-//  server
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => console.log(`🚀 Server started on http://localhost:${PORT}`));
+// Server
+app.listen(3000, function () {
+    console.log("✅ Server started at http://localhost:3000");
+});
+
