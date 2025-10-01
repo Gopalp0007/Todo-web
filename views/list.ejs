@@ -35,7 +35,7 @@
 
     <!--  List -->
     <ul>
-      <% items.forEach(function(item) { %>
+      <% tasks.forEach(function(item) { %>
         <li>
           <!--  Checkbox -->
           <form action="/toggle" method="POST" style="display:inline;">
@@ -45,7 +45,7 @@
 
           <!-- Task  -->
           <p style="<%= item.done ? 'text-decoration: line-through; color: gray;' : '' %>">
-            <%= item.text %>
+            <%= item.name %>
             <span class="priority <%= item.priority %>">[<%= item.priority %>]</span>
           </p>
 
